@@ -25,6 +25,11 @@ python app.py
 
 Open http://127.0.0.1:5000
 
+Map behavior:
+- Each post that has `latitude` and `longitude` will appear as a pin on the map.
+- When the app loads, the map will automatically center on the first available post and open its popup so you are "auto-located" to the first post.
+- Posts without valid coordinates are ignored by the map until coordinates are provided (use `import_latlong.py` or API to update).
+
 Next steps: Use MySQL with SQLAlchemy and Flask-Migrate. Example steps:
 
 1. Install MySQL server and create a database (e.g., `leyeco_db`).
@@ -50,6 +55,25 @@ flask db upgrade
 ```powershell
 python seed_db.py
 ```
+
+
+Importing coordinates from existing `latlongdata` table
+
+If you already have a MySQL table named `latlongdata` with columns `post_id`, `latitude`, and `longitude`, you can import/merge those coordinates into the app's `posts` table.
+
+- To import from the command line:
+
+```powershell
+python import_latlong.py
+```
+
+- Or call the API endpoint (POST):
+
+```powershell
+curl -X POST http://127.0.0.1:5000/api/import_latlong
+```
+
+This will upsert rows by `post_id` (create missing posts as `Post <id>` and update existing posts' lat/lng). Import will now skip rows with invalid coordinates and rows outside the Philippines (approx lat 4.0..22.0, lng 116.0..127.5) and will report `skipped_outside_ph` in the import stats.
 
 6. Run app:
 

@@ -1,4 +1,4 @@
-from app import db
+from extensions import db
 from datetime import datetime
 
 class User(db.Model):
@@ -47,3 +47,17 @@ class ConnectionPoint(db.Model):
 
     def __repr__(self):
         return f"<CP conn={self.connection_id} seq={self.seq} post={self.post_id}>"
+
+
+class LatLongData(db.Model):
+    """Represents existing table `latlongdata` with columns: post_id, latitude, longitude
+    This maps to your external MySQL table and can be used to import/merge coordinates.
+    """
+    __tablename__ = 'latlongdata'
+
+    post_id = db.Column(db.Integer, primary_key=True)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return f"<LatLong post_id={self.post_id} ({self.latitude},{self.longitude})>"
