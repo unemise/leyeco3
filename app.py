@@ -138,6 +138,9 @@ def api_latlongdata():
             except Exception:
                 lat = None
                 lng = None
+            # Skip header-like or fully-empty rows (e.g., first row with column names)
+            if pid is None and lat is None and lng is None:
+                continue
             out.append({'post_id': pid, 'lat': lat, 'lng': lng})
 
         return jsonify(out)
