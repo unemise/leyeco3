@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
+import traceback
 
 from extensions import db, migrate
 
@@ -9,6 +10,16 @@ load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
+
+# Dev UX: auto-reload templates and disable static caching when configured
+if str(os.getenv('TEMPLATES_AUTO_RELOAD', '')).lower() in ('1', 'true', 'yes'):
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.jinja_env.auto_reload = True
+if str(os.getenv('SEND_FILE_MAX_AGE_DEFAULT', '')).strip() != '':
+    try:
+        app.config['SEND_FILE_MAX_AGE_DEFAULT'] = int(os.getenv('SEND_FILE_MAX_AGE_DEFAULT', '0'))
+    except Exception:
+        app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 # Configure database (MySQL recommended for production)
 # Support either a single DATABASE_URL or individual DB_* environment variables
@@ -61,11 +72,21 @@ def api_posts():
             query = query.filter(Post.lat >= 4.0, Post.lat <= 22.0, Post.lng >= 116.0, Post.lng <= 127.5)
         db_posts = query.all()
         posts = [{"id": p.id, "name": p.name, "lat": p.lat, "lng": p.lng, "status": p.status} for p in db_posts]
-        if posts:
-            return jsonify(posts)
-    except Exception:
+        # Important: if DB query succeeds, return DB result even if empty.
+        # This prevents silently falling back to demo data when the DB has no rows.
+        return jsonify(posts)
+    except Exception as e:
+        # In dev, surface the error so you know why DB isn't being used.
+        if app.debug:
+            return jsonify({
+                "error": "DB query failed",
+                "details": str(e),
+                "db_uri": app.config.get("SQLALCHEMY_DATABASE_URI"),
+                "trace": traceback.format_exc(),
+            }), 500
+        # In prod, fall back silently
         pass
-    # Fallback to in-memory POSTS (optionally filtered)
+    # Fallback to in-memory POSTS (optionally filtered) only on exception
     if in_ph:
         filtered = [p for p in POSTS if p['lat'] >= 4.0 and p['lat'] <= 22.0 and p['lng'] >= 116.0 and p['lng'] <= 127.5]
         return jsonify(filtered)
@@ -148,5 +169,5 @@ def api_latlongdata():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    debug = os.getenv('FLASK_ENV') == 'development'
+    debug = str(os.getenv('FLASK_DEBUG', '')).lower() in ('1', 'true', 'yes') or os.getenv('FLASK_ENV') == 'development'
     app.run(debug=debug, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

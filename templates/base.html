@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Leyeco Dashboard{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div class="brand-text">
+            <div class="brand-name">Leyeco</div>
+            <div class="brand-sub">Mapping dashboard</div>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-pill">Dashboard</div>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <nav class="nav">
+        <div class="nav-title">Navigation</div>
+        <a class="nav-item {{ 'is-active' if (active_page or '') == 'dashboard' else '' }}" href="/">
+          <span class="nav-dot" aria-hidden="true"></span>
+          Dashboard
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <div class="content-inner">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
